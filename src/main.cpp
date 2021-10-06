@@ -52,7 +52,6 @@ void loop() {
 
 }
 
-
 void gerarSequencia(byte sequencia []){
   randomSeed(analogRead(0));
   // Serial.println("----------Sequencia--------------");
