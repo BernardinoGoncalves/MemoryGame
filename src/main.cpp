@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 
 byte pins [6] = {9, 10, 11, 12, 13, 19};
 byte leds [6] = {2, 3, 4, 5, 6, 7};
@@ -6,11 +7,11 @@ byte leds [6] = {2, 3, 4, 5, 6, 7};
 #define ledStart 8
 #define tamanho 100
 #define tempoLed 500
+#define address 1
 
 unsigned long tempoPisca;
 bool sttLeds = false;
-int HiScore = 1;
-
+byte HiScore = 10;
 
 void gerarSequencia(byte sequencia []);
 void ControleLeds(byte stt);
@@ -21,43 +22,44 @@ bool teclaPress(byte key);
 
 
 void setup() {
+  Serial.begin(9600);
   for(byte i = 0; i<6;i++){
     pinMode(pins[i], INPUT);
     pinMode(leds[i], OUTPUT);
   }
-
+  HiScore = EEPROM.read(address);
+  if(!digitalRead(btnStart)){
+    HiScore = 10;
+    EEPROM.write(address, HiScore);
+    Serial.println("HiScore Resetado");
+  }
   pinMode(btnStart, INPUT);
   pinMode(ledStart, OUTPUT);
 
-  Serial.begin(9600);
   Serial.println("Iniciado");
   tempoPisca = millis();
   
 }
 
 void loop() {
+
   if(!digitalRead(btnStart)){
     ControleLeds(false);
-    sttLeds = false;
-    
+    sttLeds = false;    
     Game();
   }
-
 
   if(tempoPisca+500 < millis()){
     ControleLeds(sttLeds?2:3);
     sttLeds = !sttLeds;
     tempoPisca = millis();
   }
-
 }
 
 void gerarSequencia(byte sequencia []){
   randomSeed(analogRead(0));
-  // Serial.println("----------Sequencia--------------");
   for(byte i = 0; i < tamanho; i++){
     sequencia[i] = random(0, 6);
-    // Serial.println(sequencia[i]);
   }
 }
 
@@ -75,6 +77,7 @@ void Game(){
       pos++;
       if(pos>HiScore){
         HiScore++;
+        EEPROM.write(address, HiScore);
         ControleLeds(5);
       }      
       Serial.println("Vamos pra mais uma");
@@ -187,8 +190,7 @@ void ControleLeds(byte stt){
         delay(150);
         ControleLeds(false);
         digitalWrite(ledStart, 0);  
-      }
-      
+      }      
       break;
   }  
 }
